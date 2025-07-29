@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<!--
+  ECHO Authentication Page
+  
+  Clean login and signup page with 60/40 split layout
+  Proper Firebase integration with redirect to app after authentication
+-->
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sign In – ECHO AI Cofounder</title>
+  <meta name="description" content="Sign in to ECHO to access your AI cofounder and build the future together." />
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="auth.css" />
+</head>
+<body class="auth-page">
+  <!-- Loading screen -->
+  <div id="auth-loading" class="auth-loading">
+    <div class="loading-spinner"></div>
+    <p>Loading...</p>
+  </div>
+
+  <!-- Main auth container - 60% branding, 40% login -->
+  <div id="auth-container" class="auth-container">
+    <!-- Left side - Branding (60%) -->
+    <div class="auth-brand">
+      <div class="brand-content">
+        <div class="brand-logo">
+          <div class="brand-name">E<span class="brand-accent">CHO</span></div>
+          <div class="brand-tagline">Your AI Cofounder</div>
+        </div>
+        
+        <!-- Agile Flow Animation -->
+        <div class="immersive-agile-container">
+          <div class="agile-flow-container">
+            <div class="flow-title">Agile Development Process</div>
+            <div class="flow-diagram">
+              <div class="flow-step" data-step="1">
+                <div class="step-icon"></div>
+                <div class="step-text">Plan</div>
+              </div>
+              <div class="flow-step" data-step="2">
+                <div class="step-icon"></div>
+                <div class="step-text">Design</div>
+              </div>
+              <div class="flow-step" data-step="3">
+                <div class="step-icon">⚡</div>
+                <div class="step-text">Build</div>
+              </div>
+              <div class="flow-step" data-step="4">
+                <div class="step-icon"></div>
+                <div class="step-text">Test</div>
+              </div>
+              <div class="flow-step" data-step="5">
+                <div class="step-icon"></div>
+                <div class="step-text">Review</div>
+              </div>
+              <div class="flow-step" data-step="6">
+                <div class="step-icon"></div>
+                <div class="step-text">Iterate</div>
+              </div>
+              <div class="flow-step" data-step="7">
+                <div class="step-icon"></div>
+                <div class="step-text">Deploy</div>
+              </div>
+              <div class="flow-step" data-step="8">
+                <div class="step-icon"></div>
+                <div class="step-text">Monitor</div>
+              </div>
+            </div>
+            <div class="flow-description">Continuous improvement through rapid cycles</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right side - Auth forms (40%) -->
+    <div class="auth-forms">
+      <div class="auth-header">
+        <button id="back-to-home" class="back-button" title="Back to home">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M19 12H5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M12 19L5 12L12 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </button>
+      </div>
+
+      <div class="auth-tabs">
+        <button id="signin-tab" class="auth-tab active">Sign In</button>
+        <button id="signup-tab" class="auth-tab">Sign Up</button>
+      </div>
+
+      <!-- Sign In Form -->
+      <div id="signin-form" class="auth-form">
+        <div class="form-header">
+          <h1>Welcome back, Cofounder</h1>
+          <p>Sign in to continue building the future with ECHO</p>
+        </div>
+
+        <form id="signin-form-element" class="form-content">
+          <div class="form-group">
+            <label for="signin-email">Email address</label>
+            <input 
+              id="signin-email" 
+              type="email" 
+              placeholder="Enter your email"
+              required
+            />
+          </div>
+          
+          <div class="form-group">
+            <label for="signin-password">Password</label>
+            <input 
+              id="signin-password" 
+              type="password" 
+              placeholder="Enter your password"
+              required
+            />
+          </div>
+          
+          <div id="signin-error" class="auth-error hidden"></div>
+          
+          <button id="signin-btn" type="submit" class="auth-submit">
+            Sign In
+          </button>
+          
+          <button id="forgot-password-btn" type="button" class="forgot-password-btn">
+            Forgot your password?
+          </button>
+        </form>
+
+        <div class="auth-divider">
+          <span>or continue with</span>
+        </div>
+
+        <button id="google-signin-btn" class="google-auth-btn">
+          <svg width="20" height="20" viewBox="0 0 24 24">
+            <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+            <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+            <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+            <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+          </svg>
+          <span>Continue with Google</span>
+        </button>
+      </div>
+
+      <!-- Sign Up Form -->
+      <div id="signup-form" class="auth-form hidden">
+        <div class="form-header">
+          <h1>Create your account</h1>
+          <p>Join ECHO and start building the future today</p>
+        </div>
+
+        <form id="signup-form-element" class="form-content">
+          <div class="form-group">
+            <label for="signup-name">Full name</label>
+            <input 
+              id="signup-name" 
+              type="text" 
+              placeholder="Enter your full name"
+              required
+            />
+          </div>
+          
+          <div class="form-group">
+            <label for="signup-email">Email address</label>
+            <input 
+              id="signup-email" 
+              type="email" 
+              placeholder="Enter your email"
+              required
+            />
+          </div>
+          
+          <div class="form-group">
+            <label for="signup-password">Password</label>
+            <input 
+              id="signup-password" 
+              type="password" 
+              placeholder="Create a password"
+              required
+            />
+          </div>
+          
+          <div class="form-group">
+            <label for="signup-password-confirm">Confirm password</label>
+            <input 
+              id="signup-password-confirm" 
+              type="password" 
+              placeholder="Confirm your password"
+              required
+            />
+          </div>
+          
+          <div id="signup-error" class="auth-error hidden"></div>
+          
+          <button id="signup-btn" type="submit" class="auth-submit">
+            Create Account
+          </button>
+          
+          <div class="terms-notice">
+            By creating an account, you agree to our Terms of Service and Privacy Policy.
+          </div>
+        </form>
+
+        <div class="auth-divider">
+          <span>or continue with</span>
+        </div>
+
+        <button id="google-signup-btn" class="google-auth-btn">
+          <svg width="20" height="20" viewBox="0 0 24 24">
+            <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+            <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+            <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+            <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+          </svg>
+          <span>Continue with Google</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Password Reset Modal -->
+  <div id="password-reset-modal" class="modal hidden">
+    <div class="modal-backdrop"></div>
+    <div class="modal-content password-reset-content">
+      <div class="modal-header">
+        <h2>Reset your password</h2>
+        <button id="close-reset-modal" class="close-modal-btn">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <line x1="18" y1="6" x2="6" y2="18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            <line x1="6" y1="6" x2="18" y2="18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+        </button>
+      </div>
+      <div class="modal-body">
+        <p>Enter your email address and we'll send you a link to reset your password.</p>
+        <div class="form-group">
+          <label for="reset-email">Email address</label>
+          <input id="reset-email" type="email" placeholder="Enter your email" required />
+        </div>
+        <div id="reset-error" class="auth-error hidden"></div>
+        <div id="reset-success" class="auth-success hidden">
+          Password reset email sent! Check your inbox.
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button id="send-reset-btn" class="primary-button">Send Reset Link</button>
+        <button id="cancel-reset-btn" class="secondary-button">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+  
+  <!-- Firebase Configuration -->
+  <script>
+    // Firebase configuration
+    const firebaseConfig = {
+      apiKey: "AIzaSyB2lNBvwZscx-InUNYMLtV6U5AXXzy-_o0",
+      authDomain: "echo-3994b.firebaseapp.com",
+      projectId: "echo-3994b",
+      storageBucket: "echo-3994b.firebasestorage.app",
+      messagingSenderId: "1052326409756",
+      appId: "1:1052326409756:web:ce90786d91a27c28a0d1d9"
+    };
+    
+    // Initialize Firebase
+    firebase.initializeApp(firebaseConfig);
+    
+    // Initialize Firebase services
+    window.auth = firebase.auth();
+    window.db = firebase.firestore();
+  </script>
+
+  <!-- Shared authentication utilities -->
+  <script src="shared.js"></script>
+  
+  <!-- Authentication page JavaScript -->
+  <script src="auth.js"></script>
+
+  <!-- Simple page initialization -->
+  <script>
+    // Simple initialization
+    function showLoginForm() {
+      const loadingEl = document.getElementById('auth-loading');
+      const containerEl = document.getElementById('auth-container');
+      
+      if (loadingEl) loadingEl.style.display = 'none';
+      if (containerEl) containerEl.style.display = 'grid';
+    }
+    
+    // Show form after Firebase is ready
+    if (window.AuthUtils) {
+      window.AuthUtils.PageProtection.redirectIfAuthenticated(() => {
+        showLoginForm();
+      });
+    } else {
+      // Fallback
+      setTimeout(showLoginForm, 1000);
+    }
+  </script>
+</body>
+</html>

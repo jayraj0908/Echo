@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<!--
+  BUILDWAY Chat Application – Protected Route
+  
+  This is the main chat interface that requires user authentication.
+  Users are automatically redirected to /login if not authenticated.
+-->
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ECHO Chat – Your AI Cofounder</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <!-- Loading screen while checking authentication -->
+  <div id="auth-loading" class="auth-loading">
+    <div class="loading-spinner"></div>
+    <p>Loading your chat...</p>
+  </div>
+
+  <div id="app" class="app-container" style="display: none;">
+    <!-- Sidebar for chat history and actions -->
+    <aside id="sidebar" class="sidebar">
+      <div class="sidebar-top">
+        <button id="new-chat-btn" class="primary-button new-chat-button" title="New chat">
+          <!-- Plus icon -->
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M12 5V19" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+            <path d="M5 12H19" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+          </svg>
+          <span>New chat</span>
+        </button>
+      </div>
+      <nav id="chat-list" class="chat-list">
+        <!-- Chat items are rendered here via JS -->
+      </nav>
+      <div class="sidebar-bottom">
+        <button id="theme-toggle" class="icon-button" title="Toggle theme">
+          <!-- Sun/Moon icon toggled via JS -->
+          <svg id="theme-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <!-- Sun path (shown in light mode) -->
+            <circle cx="12" cy="12" r="5" stroke="currentColor" stroke-width="2" />
+            <line x1="12" y1="1" x2="12" y2="3" stroke="currentColor" stroke-width="2" />
+            <line x1="12" y1="21" x2="12" y2="23" stroke="currentColor" stroke-width="2" />
+            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" stroke="currentColor" stroke-width="2" />
+            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" stroke="currentColor" stroke-width="2" />
+            <line x1="1" y1="12" x2="3" y2="12" stroke="currentColor" stroke-width="2" />
+            <line x1="21" y1="12" x2="23" y2="12" stroke="currentColor" stroke-width="2" />
+            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" stroke="currentColor" stroke-width="2" />
+            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" stroke="currentColor" stroke-width="2" />
+          </svg>
+        </button>
+        <button id="settings-toggle" class="icon-button" title="Settings">
+          <!-- Gear icon -->
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M12 15.5C13.933 15.5 15.5 13.933 15.5 12C15.5 10.067 13.933 8.5 12 8.5C10.067 8.5 8.5 10.067 8.5 12C8.5 13.933 10.067 15.5 12 15.5Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+            <path d="M19.4 15A7.963 7.963 0 0 0 20 12C20 10.927 19.793 9.897 19.4 9M4.6 9A7.963 7.963 0 0 0 4 12C4 13.073 4.207 14.103 4.6 15M9 4.6C9.897 4.207 10.927 4 12 4C13.073 4 14.103 4.207 15 4.6M15 19.4C14.103 19.793 13.073 20 12 20C10.927 20 9.897 19.793 9 19.4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+          </svg>
+        </button>
+      </div>
+      <!-- User Profile Section (always shown in app) -->
+      <div id="user-profile" class="user-profile">
+        <div class="user-avatar" id="user-avatar">U</div>
+        <div class="user-info">
+          <div class="user-name" id="user-name">Loading...</div>
+          <div class="user-email" id="user-email">Loading...</div>
+        </div>
+        <button id="user-menu-btn" class="icon-button" title="User menu">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2"/>
+            <circle cx="12" cy="5" r="1" stroke="currentColor" stroke-width="2"/>
+            <circle cx="12" cy="19" r="1" stroke="currentColor" stroke-width="2"/>
+          </svg>
+        </button>
+      </div>
+    </aside>
+
+    <!-- Main conversation section -->
+    <section id="main-section" class="main-section">
+      <header class="top-bar">
+        <div class="top-left">
+          <button id="mobile-menu-btn" class="icon-button mobile-only" title="Show conversations">
+            <!-- Hamburger icon -->
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <line x1="3" y1="6" x2="21" y2="6" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+              <line x1="3" y1="12" x2="21" y2="12" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+              <line x1="3" y1="18" x2="21" y2="18" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+            </svg>
+          </button>
+        </div>
+        <div class="brand-name">BUILD<span class="brand-accent">WAY</span></div>
+        <div class="top-right">
+          <!-- Model selection removed - using default model -->
+        </div>
+      </header>
+      <main id="messages" class="messages">
+        <!-- The conversation messages will be dynamically inserted here. -->
+      </main>
+      <!-- Action row appears during streaming to allow retrying or stopping -->
+      <div id="action-row" class="action-row hidden">
+        <button id="retry-btn" class="secondary-button">Regenerate response</button>
+        <button id="stop-btn" class="secondary-button">Stop generating</button>
+      </div>
+      <!-- Input area for composing messages -->
+      <footer class="input-area">
+        <div class="input-container">
+          <textarea id="message-input" class="message-input" placeholder="Send a message..." rows="1"></textarea>
+          <button id="send-btn" class="primary-button send-button" title="Send">
+            <!-- Send arrow icon -->
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M5 12H19" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+              <path d="M12 5L19 12L12 19" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
+          </button>
+        </div>
+        <div class="input-hints">
+          <span>Enter to send</span>
+          <span class="dot">·</span>
+          <span>Shift + Enter for newline</span>
+        </div>
+      </footer>
+    </section>
+  </div>
+
+  <!-- Settings modal for user preferences -->
+  <div id="settings-modal" class="modal hidden">
+    <div class="modal-backdrop" id="modal-backdrop"></div>
+    <div class="modal-content">
+      <h2>Settings</h2>
+      
+      <!-- User Profile Section -->
+      <div class="settings-section">
+        <h3>Profile</h3>
+        <div class="profile-info">
+          <div class="profile-avatar">
+            <div class="avatar-circle" id="settings-avatar">U</div>
+            <button class="change-avatar-btn" id="change-avatar-btn">Change Avatar</button>
+          </div>
+          <div class="profile-details">
+            <div class="form-group">
+              <label for="display-name-input">Display Name</label>
+              <input id="display-name-input" type="text" placeholder="Your name" />
+            </div>
+            <div class="form-group">
+              <label for="user-email-display">Email</label>
+              <input id="user-email-display" type="email" placeholder="Loading..." readonly />
+            </div>
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="theme-select">Theme</label>
+          <select id="theme-select" class="form-select">
+            <option value="light">Light</option>
+            <option value="dark">Dark</option>
+            <option value="auto">Auto</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- BUILDWAY Configuration Section -->
+      <div class="settings-section">
+        <h3>BUILDWAY Configuration</h3>
+        <div class="form-group">
+          <label for="default-agent-select">Default Agent</label>
+          <select id="default-agent-select" class="form-select">
+            <option value="echo">BUILDWAY (CEO)</option>
+            <option value="analyst">Mary (Business Analyst)</option>
+            <option value="pm">John (Product Manager)</option>
+            <option value="ux-expert">Sally (UX Expert)</option>
+            <option value="architect">Winston (System Architect)</option>
+            <option value="po">Sarah (Product Owner)</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="response-style-select">Response Style</label>
+          <select id="response-style-select" class="form-select">
+            <option value="professional" selected>Professional</option>
+            <option value="detailed">Detailed & Technical</option>
+            <option value="concise">Concise & Direct</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="auto-save-toggle">Auto-save Conversations</label>
+          <input id="auto-save-toggle" type="checkbox" checked />
+        </div>
+      </div>
+
+      <!-- Content Generation Section -->
+      <div class="settings-section">
+        <h3>Content Generation</h3>
+        <div class="form-group">
+          <label for="document-format-select">Default Document Format</label>
+          <select id="document-format-select" class="form-select">
+            <option value="markdown">Markdown</option>
+            <option value="pdf">PDF</option>
+            <option value="docx">Word Document</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="enable-diagrams-toggle">Enable Diagram Generation</label>
+          <input id="enable-diagrams-toggle" type="checkbox" checked />
+        </div>
+        <div class="form-group">
+          <label for="enable-code-gen-toggle">Enable Code Generation</label>
+          <input id="enable-code-gen-toggle" type="checkbox" checked />
+        </div>
+      </div>
+
+      <!-- Chat Management Section -->
+      <div class="settings-section">
+        <h3>Chat Management</h3>
+        <div class="form-group">
+          <label for="chat-name-input">Current Chat Title</label>
+          <input id="chat-name-input" type="text" placeholder="Untitled conversation" />
+        </div>
+        <div class="form-group">
+          <label for="max-tokens-input">Max Response Length</label>
+          <select id="max-tokens-input" class="form-select">
+            <option value="1024">Short (1024 tokens)</option>
+            <option value="2048" selected>Medium (2048 tokens)</option>
+            <option value="4000">Long (4000 tokens)</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Usage Statistics Section -->
+      <div class="settings-section">
+        <h3>Usage Statistics</h3>
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-number" id="total-conversations">-</div>
+            <div class="stat-label">Total Conversations</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-number" id="total-messages">-</div>
+            <div class="stat-label">Messages Sent</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-number" id="account-age">-</div>
+            <div class="stat-label">Days Active</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-number" id="favorite-agent">-</div>
+            <div class="stat-label">Most Used Agent</div>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>
+            <input type="checkbox" id="usage-analytics-toggle" checked />
+            Allow anonymous usage analytics to improve BUILDWAY
+          </label>
+        </div>
+      </div>
+
+      <!-- Account & Legal Section -->
+      <div class="settings-section">
+        <h3>Account & Legal</h3>
+        <div class="legal-links">
+          <a href="#" id="privacy-policy-link" class="legal-link">Privacy Policy</a>
+          <a href="#" id="terms-service-link" class="legal-link">Terms of Service</a>
+          <a href="#" id="support-link" class="legal-link">Get Support</a>
+        </div>
+        <div class="account-info">
+          <p class="account-status">
+            <span class="status-indicator online"></span>
+            Account Status: <strong>Active</strong>
+          </p>
+          <p class="subscription-info">
+            Plan: <strong id="user-plan">Free</strong> • 
+            <a href="#" id="upgrade-plan-link">Upgrade to Pro</a>
+          </p>
+        </div>
+      </div>
+
+      <div class="modal-actions">
+        <button id="save-settings-btn" class="primary-button">Save Settings</button>
+        <button id="close-settings-btn" class="secondary-button">Cancel</button>
+        <button id="logout-btn" class="danger-button">Sign Out</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+  
+  <!-- Firebase Configuration -->
+  <script>
+    // Firebase configuration - Your actual project config
+    const firebaseConfig = {
+      apiKey: "AIzaSyB2lNBvwZscx-InUNYMLtV6U5AXXzy-_o0",
+      authDomain: "echo-3994b.firebaseapp.com",
+      projectId: "echo-3994b",
+      storageBucket: "echo-3994b.firebasestorage.app",
+      messagingSenderId: "1052326409756",
+      appId: "1:1052326409756:web:ce90786d91a27c28a0d1d9"
+    };
+    
+    // Initialize Firebase
+    firebase.initializeApp(firebaseConfig);
+    
+    // Initialize Firebase services
+    window.auth = firebase.auth();
+    window.db = firebase.firestore();
+    
+    console.log('Firebase initialized successfully with project:', firebaseConfig.projectId);
+  </script>
+
+  <!-- Shared authentication utilities -->
+  <script src="shared.js"></script>
+  <!-- PrismJS bundle for syntax highlighting (generated by build-prism.js) -->
+  <script src="libs/prism-all.js"></script>
+  <!-- Chat application logic -->
+  <script src="app.js"></script>
+  
+  <!-- Authentication protection script -->
+  <script>
+    // Protect this page - redirect if not authenticated
+    window.auth.onAuthStateChanged((user) => {
+      const authLoading = document.getElementById('auth-loading');
+      const appContainer = document.getElementById('app');
+      
+      if (user) {
+        // User is authenticated, show the app
+        authLoading.style.display = 'none';
+        appContainer.style.display = 'flex';
+      } else {
+        // User is not authenticated, redirect to login
+        window.location.href = '/login.html';
+      }
+    });
+  </script>
+</body>
+</html>
