@@ -11,6 +11,9 @@
   "author": "",
   "license": "ISC",
   "description": "",
+  "engines": {
+    "node": ">=18.0.0"
+  },
   "dependencies": {
     "dotenv": "^17.2.1",
     "firebase": "^10.7.1"

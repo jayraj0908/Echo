@@ -2109,7 +2109,7 @@ Please continue with your request, and I'll respond from my specialized perspect
         
         // Handle menu clicks
         menu.addEventListener('click', (e) => {
-          const action = e.target.closest('[data-action]')?.dataset.action;
+          const action = e.target.closest('[data-action]') ? e.target.closest('[data-action]').dataset.action : null;
           if (action === 'logout') {
             handleAppLogout();
           }

@@ -299,9 +299,9 @@ OPERATIONAL FRAMEWORK:
 CONTENT GENERATION CAPABILITIES:
 You are equipped with Claude Code SDK integration and can generate the following content types:
 
-DOCUMENTS: ${agentInfo.contentGeneration?.documents?.join(', ') || 'Professional documentation'}
-DIAGRAMS: ${agentInfo.contentGeneration?.diagrams?.join(', ') || 'Visual representations'}
-TEMPLATES: ${agentInfo.contentGeneration?.templates?.join(', ') || 'Reusable frameworks'}
+DOCUMENTS: ${(agentInfo.contentGeneration && agentInfo.contentGeneration.documents) ? agentInfo.contentGeneration.documents.join(', ') : 'Professional documentation'}
+DIAGRAMS: ${(agentInfo.contentGeneration && agentInfo.contentGeneration.diagrams) ? agentInfo.contentGeneration.diagrams.join(', ') : 'Visual representations'}
+TEMPLATES: ${(agentInfo.contentGeneration && agentInfo.contentGeneration.templates) ? agentInfo.contentGeneration.templates.join(', ') : 'Reusable frameworks'}
 
 CONTENT GENERATION PROTOCOLS:
 - Use proper markdown formatting for all documents
@@ -514,7 +514,7 @@ Instead of guessing which specialist you need, just tell me about your project! 
 "I need to plan my product features..." → I'll connect you with John for strategy
 "My users need a better interface..." → I'll connect you with Sally for UX
 
-**Current Specialist:** ${currentAgentInfo?.title || 'ECHO (Workflow Facilitator)'}
+**Current Specialist:** ${(currentAgentInfo && currentAgentInfo.title) ? currentAgentInfo.title : 'ECHO (Workflow Facilitator)'}
 
 Let me know what you're working on, and I'll guide you to the right specialist!`;
   }
@@ -578,7 +578,7 @@ I operate with ${agentInfo.style.toLowerCase()} methodology as an integrated mem
 • **Winston** (\`*/agent architect\`) - System Architect & Technical Infrastructure Specialist
 • **Sarah** (\`*/agent po\`) - Product Owner & Quality Assurance Specialist
 
-**Current Active Leadership:** ${currentAgentInfo?.title || 'ECHO (Chief Executive Officer)'}
+**Current Active Leadership:** ${(currentAgentInfo && currentAgentInfo.title) ? currentAgentInfo.title : 'ECHO (Chief Executive Officer)'}
 
 **Delegation Protocol:** Use \`*/agent [name]\` for specialist engagement
 
@@ -629,7 +629,7 @@ I operate with ${agentInfo.style.toLowerCase()} methodology as an integrated mem
 
 ## Current Position
 **Phase:** ${phaseMap[currentAgent] || 'Unknown Phase'}
-**Active Specialist:** ${agentInfo?.title || 'ECHO (Workflow Facilitator)'}
+**Active Specialist:** ${(agentInfo && agentInfo.title) ? agentInfo.title : 'ECHO (Workflow Facilitator)'}
 
 ## BMad Methodology Progress
 1. ${currentAgent === 'analyst' ? '→ **IDEATION** ← (You are here)' : 'IDEATION'} - Research & Brainstorming
@@ -640,7 +640,7 @@ I operate with ${agentInfo.style.toLowerCase()} methodology as an integrated mem
 6. **DEVELOPMENT** - Sprint Cycles & Implementation
 
 ## Current Focus
-${agentInfo?.focus || 'Workflow facilitation and specialist coordination'}
+${(agentInfo && agentInfo.focus) ? agentInfo.focus : 'Workflow facilitation and specialist coordination'}
 
 ## Next Recommended Step
 ${nextSteps[currentAgent] || 'Continue with current specialist or use *help for guidance'}
@@ -662,8 +662,8 @@ Want to move to a different phase or need guidance? Just let me know what you're
     return `# ECHO - Current Status
 
 **Your Workflow Facilitator:** ECHO - BMad Methodology Guide
-**Active Specialist:** ${agentInfo?.title || 'ECHO (Workflow Facilitator)'}
-**Current Focus:** ${agentInfo?.focus || 'Connecting you with the right specialist for your project needs'}
+**Active Specialist:** ${(agentInfo && agentInfo.title) ? agentInfo.title : 'ECHO (Workflow Facilitator)'}
+**Current Focus:** ${(agentInfo && agentInfo.focus) ? agentInfo.focus : 'Connecting you with the right specialist for your project needs'}
 
 ## BMad Methodology Support
 • Intelligent workflow detection and specialist recommendation
