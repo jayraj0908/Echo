@@ -12,6 +12,14 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>ECHO – Your AI Cofounder</title>
   <meta name="description" content="Meet your AI cofounder. ECHO brings together specialized AI agents to help you build, grow, and scale your startup with intelligent automation." />
+  
+  <!-- Preload critical resources -->
+  <link rel="preload" href="styles.css" as="style" />
+  <link rel="preload" href="landing.css" as="style" />
+  <link rel="preload" href="landing.js" as="script" />
+  <link rel="dns-prefetch" href="https://www.gstatic.com" />
+  <link rel="dns-prefetch" href="https://api.anthropic.com" />
+  
   <link rel="stylesheet" href="styles.css" />
   <link rel="stylesheet" href="landing.css" />
 </head>
@@ -218,10 +226,10 @@
     </div>
   </footer>
 
-  <!-- Firebase SDK -->
-  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+  <!-- Firebase SDK - Optimized loading -->
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js" defer></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js" defer></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js" defer></script>
   
   <!-- Firebase Configuration -->
   <script>
@@ -235,19 +243,47 @@
       appId: "1:1052326409756:web:ce90786d91a27c28a0d1d9"
     };
 
-    // Initialize Firebase with error handling
-    try {
-      firebase.initializeApp(firebaseConfig);
-      
-      // Initialize Firebase services
-      window.auth = firebase.auth();
-      window.db = firebase.firestore();
-    } catch (error) {
-      console.warn('Firebase initialization failed:', error);
-      // Create mock auth object for landing page
-      window.auth = {
-        onAuthStateChanged: (callback) => callback(null)
-      };
+    // Initialize Firebase with error handling and performance optimization
+    function initializeFirebase() {
+      try {
+        if (typeof firebase === 'undefined') {
+          throw new Error('Firebase SDK not loaded');
+        }
+        
+        firebase.initializeApp(firebaseConfig);
+        
+        // Initialize Firebase services with performance settings
+        window.auth = firebase.auth();
+        window.db = firebase.firestore();
+        
+        // Enable Firestore cache for better performance
+        if (window.db) {
+          window.db.enablePersistence({
+            synchronizeTabs: true
+          }).catch((err) => {
+            console.log('Firestore persistence failed:', err.code);
+          });
+        }
+        
+        console.log('Firebase initialized successfully');
+      } catch (error) {
+        console.warn('Firebase initialization failed:', error);
+        // Create mock auth object for landing page
+        window.auth = {
+          onAuthStateChanged: (callback) => callback(null)
+        };
+        window.db = null;
+      }
+    }
+    
+    // Initialize when Firebase SDK is ready
+    if (typeof firebase !== 'undefined') {
+      initializeFirebase();
+    } else {
+      // Wait for Firebase SDK to load
+      window.addEventListener('load', () => {
+        setTimeout(initializeFirebase, 100);
+      });
     }
   </script>
 

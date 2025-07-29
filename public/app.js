@@ -48,19 +48,34 @@
     syncStatus: 'offline', // offline, syncing, synced, error
   };
 
-  // DOM references
-  const chatListEl = document.getElementById('chat-list');
-  const messagesEl = document.getElementById('messages');
-  const newChatBtn = document.getElementById('new-chat-btn');
-  const sendBtn = document.getElementById('send-btn');
-  const messageInput = document.getElementById('message-input');
+  // DOM references - Cached for performance
+  const DOM = {
+    chatList: document.getElementById('chat-list'),
+    messages: document.getElementById('messages'),
+    newChatBtn: document.getElementById('new-chat-btn'),
+    sendBtn: document.getElementById('send-btn'),
+    messageInput: document.getElementById('message-input'),
+    themeToggle: document.getElementById('theme-toggle'),
+    themeIcon: document.getElementById('theme-icon'),
+    settingsToggle: document.getElementById('settings-toggle'),
+    settingsModal: document.getElementById('settings-modal'),
+    modalBackdrop: document.getElementById('modal-backdrop'),
+    appContainer: document.getElementById('app')
+  };
+  
+  // Legacy references for compatibility
+  const chatListEl = DOM.chatList;
+  const messagesEl = DOM.messages;
+  const newChatBtn = DOM.newChatBtn;
+  const sendBtn = DOM.sendBtn;
+  const messageInput = DOM.messageInput;
   // Model selection removed - using default model
   const defaultModel = 'claude-3-haiku-20240307';
-  const themeToggle = document.getElementById('theme-toggle');
-  const themeIcon = document.getElementById('theme-icon');
-  const settingsToggle = document.getElementById('settings-toggle');
-  const settingsModal = document.getElementById('settings-modal');
-  const modalBackdrop = document.getElementById('modal-backdrop');
+  const themeToggle = DOM.themeToggle;
+  const themeIcon = DOM.themeIcon;
+  const settingsToggle = DOM.settingsToggle;
+  const settingsModal = DOM.settingsModal;
+  const modalBackdrop = DOM.modalBackdrop;
   const saveSettingsBtn = document.getElementById('save-settings-btn');
   const closeSettingsBtn = document.getElementById('close-settings-btn');
   const logoutBtn = document.getElementById('logout-btn');
@@ -97,8 +112,67 @@
   const actionRow = document.getElementById('action-row');
   // Download button removed as requested
   const mobileMenuBtn = document.getElementById('mobile-menu-btn');
-  const appContainer = document.getElementById('app');
+  const appContainer = DOM.appContainer;
+  
+  // Performance tracking
+  const performanceState = {
+    lastRenderTime: 0,
+    animationFrameId: null,
+    eventListeners: new Map(),
+    isDestroyed: false,
+    apiCache: new Map(),
+    lastApiCall: 0,
+    requestQueue: []
+  };
 
+  /**
+   * Performance utilities
+   */
+  function requestIdleCallback(callback, options = {}) {
+    if ('requestIdleCallback' in window) {
+      return window.requestIdleCallback(callback, options);
+    }
+    return setTimeout(callback, 1);
+  }
+  
+  function debounce(func, wait) {
+    let timeout;
+    return function executedFunction(...args) {
+      const later = () => {
+        clearTimeout(timeout);
+        func.apply(this, args);
+      };
+      clearTimeout(timeout);
+      timeout = setTimeout(later, wait);
+    };
+  }
+  
+  function throttle(func, limit) {
+    let inThrottle;
+    return function(...args) {
+      if (!inThrottle) {
+        func.apply(this, args);
+        inThrottle = true;
+        setTimeout(() => inThrottle = false, limit);
+      }
+    };
+  }
+  
+  // Add event listener with cleanup tracking
+  function addEventListenerWithCleanup(element, event, handler, options) {
+    if (performanceState.isDestroyed) return;
+    
+    element.addEventListener(event, handler, options);
+    
+    const key = `${element.tagName}-${event}-${Date.now()}`;
+    performanceState.eventListeners.set(key, { element, event, handler, options });
+    
+    return () => {
+      element.removeEventListener(event, handler, options);
+      performanceState.eventListeners.delete(key);
+    };
+  }
+  
   /**
    * Utility functions
    */
@@ -245,8 +319,13 @@
    * Chat list rendering
    */
   function renderChatList() {
-    chatListEl.innerHTML = '';
-    state.conversations.forEach((conv) => {
+    if (!chatListEl || performanceState.isDestroyed) return;
+    
+    requestAnimationFrame(() => {
+      // Use DocumentFragment for better performance
+      const fragment = document.createDocumentFragment();
+      
+      state.conversations.forEach((conv) => {
       const item = document.createElement('div');
       item.className = 'chat-item' + (conv.id === state.activeId ? ' active' : '');
       item.dataset.id = conv.id;
@@ -289,7 +368,12 @@
         renderMessages();
         closeSidebarOnMobile();
       });
-      chatListEl.appendChild(item);
+        fragment.appendChild(item);
+      });
+      
+      // Clear and append all at once for better performance
+      chatListEl.innerHTML = '';
+      chatListEl.appendChild(fragment);
     });
   }
 
@@ -1347,12 +1431,16 @@ Get professional architecture diagrams with:
    * content, up to a maximum height.  If the content exceeds the
    * maximum height, the textarea scrolls internally.
    */
-  function autoGrowInput() {
-    messageInput.style.height = 'auto';
-    const maxHeight = 160;
-    const newHeight = Math.min(messageInput.scrollHeight, maxHeight);
-    messageInput.style.height = newHeight + 'px';
-  }
+  const autoGrowInput = debounce(() => {
+    if (!messageInput || performanceState.isDestroyed) return;
+    
+    requestAnimationFrame(() => {
+      messageInput.style.height = 'auto';
+      const maxHeight = 160;
+      const newHeight = Math.min(messageInput.scrollHeight, maxHeight);
+      messageInput.style.height = newHeight + 'px';
+    });
+  }, 16); // ~60fps
 
   /**
    * Sends a user message.  This helper updates the conversation state
@@ -1444,6 +1532,16 @@ Please continue with your request, and I'll respond from my specialized perspect
    */
   async function callAPI(conv) {
     if (!conv) return;
+    
+    // Throttle API calls to prevent spam
+    const now = Date.now();
+    const timeSinceLastCall = now - performanceState.lastApiCall;
+    if (timeSinceLastCall < 1000) { // 1 second throttle
+      console.log('API call throttled');
+      return;
+    }
+    performanceState.lastApiCall = now;
+    
     // Remove existing assistant message that we are about to regenerate
     // We rely on messages order.
     state.streaming = true;
@@ -2020,16 +2118,50 @@ Please continue with your request, and I'll respond from my specialized perspect
   /**
    * Initialize event listeners and load initial state on page load.
    */
+  /**
+   * Cleanup function to remove event listeners and clear resources
+   */
+  function cleanup() {
+    performanceState.isDestroyed = true;
+    
+    // Cancel any pending animation frames
+    if (performanceState.animationFrameId) {
+      cancelAnimationFrame(performanceState.animationFrameId);
+    }
+    
+    // Remove all tracked event listeners
+    performanceState.eventListeners.forEach(({ element, event, handler, options }) => {
+      element.removeEventListener(event, handler, options);
+    });
+    performanceState.eventListeners.clear();
+  }
+  
+  // Cleanup on page unload
+  window.addEventListener('beforeunload', cleanup);
+  
   function init() {
+    // Add preload class to prevent transitions during load
+    document.body.classList.add('preload-transitions');
+    
     loadState();
     loadTheme();
     initializeAuth(); // Prepare for future Supabase integration
+    
     // If no conversations exist, create one
     if (state.conversations.length === 0) {
       createConversation();
     }
+    
     renderChatList();
     renderMessages();
+    
+    // Remove preload class after a short delay
+    requestAnimationFrame(() => {
+      setTimeout(() => {
+        document.body.classList.remove('preload-transitions');
+        document.body.classList.add('loaded');
+      }, 100);
+    });
 
     // Theme toggle
     themeToggle.addEventListener('click', () => {
@@ -2128,6 +2260,19 @@ Please continue with your request, and I'll respond from my specialized perspect
         }, 100);
       });
     }
+  }
+
+  // Register service worker for performance
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('/sw.js')
+        .then((registration) => {
+          console.log('SW registered: ', registration);
+        })
+        .catch((registrationError) => {
+          console.log('SW registration failed: ', registrationError);
+        });
+    });
   }
 
   document.addEventListener('DOMContentLoaded', init);

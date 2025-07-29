@@ -13,6 +13,9 @@
     linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(240, 240, 255, 0.05) 100%),
     linear-gradient(45deg, rgba(165, 215, 232, 0.1) 0%, rgba(255, 182, 193, 0.1) 50%, rgba(221, 160, 221, 0.1) 100%);
   min-height: 100vh;
+  contain: layout style;
+  will-change: background;
+  transition: background-color 0.3s ease;
 }
 
 html[data-theme='dark'] .landing-page {
@@ -79,21 +82,21 @@ html[data-theme='dark'] .landing-page::before {
 /* Navigation - Liquid Glass */
 .landing-nav {
   position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
+  top: 16px;
+  left: 16px;
+  right: 16px;
   background: rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
   border-bottom: 1px solid rgba(255, 255, 255, 0.2);
   box-shadow: 
     0 8px 32px rgba(0, 0, 0, 0.1),
     inset 0 1px 0 rgba(255, 255, 255, 0.2);
   z-index: 100;
-  transition: all 0.3s ease;
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.3s ease;
   border-radius: 0 0 24px 24px;
-  margin: 0 16px;
-  top: 16px;
+  contain: layout style;
+  will-change: transform;
 }
 
 html[data-theme='dark'] .landing-nav {
@@ -441,16 +444,18 @@ html[data-theme='dark'] .hero::before {
   box-shadow: 
     0 20px 60px rgba(0, 0, 0, 0.1),
     inset 0 1px 0 rgba(255, 255, 255, 0.2);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
   width: 100%;
   max-width: 520px;
   height: 400px;
   overflow: hidden;
-  transition: all 0.4s ease;
+  transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.4s ease;
   position: relative;
   display: flex;
   flex-direction: column;
+  contain: layout style;
+  will-change: transform;
 }
 
 .chat-preview::before {
@@ -1073,6 +1078,11 @@ html[data-theme='dark'] .chat-input {
   
   .nav-actions {
     gap: 0.5rem;
+  }
+  
+  .landing-nav {
+    margin: 0 8px;
+    top: 8px;
   }
 
   .hero {

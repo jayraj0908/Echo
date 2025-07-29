@@ -193,14 +193,16 @@
   }
 
   /**
-   * Create particle burst effect for theme toggle
+   * Create particle burst effect for theme toggle - Optimized
    */
   function createThemeToggleParticles(x, y) {
     const colors = document.documentElement.getAttribute('data-theme') === 'dark' 
       ? ['#19c37d', '#7c3aed', '#ffffff'] 
       : ['#10a37f', '#7c3aed', '#333333'];
     
-    for (let i = 0; i < 12; i++) {
+    // Reduce particle count for better performance
+    const particleCount = window.innerWidth < 768 ? 6 : 12;
+    for (let i = 0; i < particleCount; i++) {
       const particle = document.createElement('div');
       const size = Math.random() * 4 + 2;
       const angle = (i / 12) * Math.PI * 2;
@@ -274,19 +276,22 @@
     function updateNavbar() {
       const scrollY = window.scrollY;
       
-      // Add/remove scrolled class based on scroll position
-      if (scrollY > 50) {
-        nav.classList.add('scrolled');
-      } else {
-        nav.classList.remove('scrolled');
-      }
+      // Use requestAnimationFrame for smooth updates
+      requestAnimationFrame(() => {
+        // Add/remove scrolled class based on scroll position
+        if (scrollY > 50) {
+          nav.classList.add('scrolled');
+        } else {
+          nav.classList.remove('scrolled');
+        }
 
-      // Hide/show navbar on scroll direction (optional)
-      if (scrollY > lastScrollY && scrollY > 100) {
-        nav.style.transform = 'translateY(-100%)';
-      } else {
-        nav.style.transform = 'translateY(0)';
-      }
+        // Hide/show navbar on scroll direction with transform
+        if (scrollY > lastScrollY && scrollY > 100) {
+          nav.style.transform = 'translateY(-100%)';
+        } else {
+          nav.style.transform = 'translateY(0)';
+        }
+      });
 
       lastScrollY = scrollY;
       ticking = false;
@@ -411,9 +416,14 @@
   }
 
   /**
-   * Initialize floating particle system
+   * Initialize floating particle system - Performance optimized
    */
   function initParticleSystem() {
+    // Skip particles on mobile for better performance
+    if (window.innerWidth < 768 || window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      return;
+    }
+    
     const particleContainer = document.createElement('div');
     particleContainer.className = 'particle-system';
     particleContainer.style.cssText = `
@@ -429,9 +439,10 @@
     
     document.body.appendChild(particleContainer);
     
-    // Create particles
-    for (let i = 0; i < 30; i++) {
-      setTimeout(() => createParticle(particleContainer), i * 200);
+    // Reduce particle count for better performance
+    const particleCount = Math.min(15, Math.floor(window.innerWidth / 100));
+    for (let i = 0; i < particleCount; i++) {
+      setTimeout(() => createParticle(particleContainer), i * 300);
     }
   }
 
@@ -923,19 +934,30 @@
   }
 
   /**
-   * Set up mouse trail effects
+   * Set up mouse trail effects - Throttled for performance
    */
   function setupMouseEffects() {
+    // Skip mouse effects on mobile and for users who prefer reduced motion
+    if (window.innerWidth < 768 || window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      return;
+    }
+    
     let mouseX = 0, mouseY = 0;
-    document.addEventListener('mousemove', (e) => {
+    let lastTrailTime = 0;
+    
+    const throttledMouseMove = (e) => {
       mouseX = e.clientX;
       mouseY = e.clientY;
       
-      // Create trail particle occasionally
-      if (Math.random() < 0.05) {
+      const now = Date.now();
+      // Create trail particle less frequently and throttled
+      if (now - lastTrailTime > 200 && Math.random() < 0.03) {
         createTrailParticle(mouseX, mouseY);
+        lastTrailTime = now;
       }
-    });
+    };
+    
+    document.addEventListener('mousemove', throttledMouseMove, { passive: true });
   }
 
   /**
@@ -1048,6 +1070,19 @@
   // Initialize AuthUtils
   if (window.AuthUtils) {
     window.AuthUtils.init();
+  }
+
+  // Register service worker for performance
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('/sw.js')
+        .then((registration) => {
+          console.log('SW registered: ', registration);
+        })
+        .catch((registrationError) => {
+          console.log('SW registration failed: ', registrationError);
+        });
+    });
   }
 
   // Initialize landing page
