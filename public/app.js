@@ -1055,6 +1055,12 @@ ${content.length + 200}
       const enhancedContent = processEnhancedContent(professionalContent);
       content.innerHTML = parseMarkdown(enhancedContent);
       
+      // Check for preview content for assistant messages
+      const preview = createContentPreview(msg.content);
+      if (preview) {
+        content.appendChild(preview);
+      }
+      
       const actions = document.createElement('div');
       actions.className = 'bubble-actions';
       
@@ -1445,7 +1451,15 @@ Get professional architecture diagrams with:
         // Apply professional formatting first, then enhanced content processing
         const professionalContent = enhanceResponseFormatting(content);
         const enhancedContent = processEnhancedContent(professionalContent);
-        contentEl.innerHTML = parseMarkdown(enhancedContent);
+        
+        // Check for preview content
+        const preview = createContentPreview(content);
+        if (preview) {
+          contentEl.innerHTML = parseMarkdown(enhancedContent);
+          contentEl.appendChild(preview);
+        } else {
+          contentEl.innerHTML = parseMarkdown(enhancedContent);
+        }
         
         // Re-attach copy handlers for code blocks
         attachCopyHandlers();
@@ -1499,6 +1513,186 @@ Get professional architecture diagrams with:
     }, 30); // Adjust typing speed here (30ms per character)
     
     return typeInterval;
+  }
+
+  /**
+   * Detect and create preview components for structured content
+   */
+  function createContentPreview(content) {
+    // Check if content contains table data
+    if (isTableContent(content)) {
+      return createTablePreview(content);
+    }
+    
+    // Check if content is a document/PRD
+    if (isDocumentContent(content)) {
+      return createDocumentPreview(content);
+    }
+    
+    return null;
+  }
+
+  /**
+   * Check if content contains table data
+   */
+  function isTableContent(content) {
+    // Look for table patterns: pipes, multiple rows, headers
+    const lines = content.split('\n');
+    const tableRows = lines.filter(line => line.includes('|') && line.trim().length > 0);
+    return tableRows.length >= 3; // At least header + separator + data
+  }
+
+  /**
+   * Check if content is document-like (PRD, specifications, etc.)
+   */
+  function isDocumentContent(content) {
+    // Look for document patterns: multiple headers, structured sections
+    const headerCount = (content.match(/^#+\s/gm) || []).length;
+    const hasStructure = content.includes('##') && content.length > 500;
+    return headerCount >= 3 || hasStructure;
+  }
+
+  /**
+   * Create table preview component
+   */
+  function createTablePreview(content) {
+    const tableData = parseTableFromContent(content);
+    if (!tableData) return null;
+
+    const previewDiv = document.createElement('div');
+    previewDiv.className = 'table-preview';
+    
+    previewDiv.innerHTML = `
+      <div class="table-preview-header">
+        <div class="table-preview-title">
+          <span>📊</span>
+          <span>Data Table</span>
+        </div>
+        <div class="table-preview-actions">
+          <button class="preview-btn copy-btn" onclick="copyTableToClipboard(this)">
+            <span>📋</span>
+            <span>Copy</span>
+          </button>
+          <button class="preview-btn download-btn" onclick="downloadTable(this, 'csv')">
+            <span>⬇️</span>
+            <span>Download CSV</span>
+          </button>
+        </div>
+      </div>
+      <div class="table-preview-content">
+        ${generateTableHTML(tableData)}
+      </div>
+    `;
+
+    return previewDiv;
+  }
+
+  /**
+   * Create document preview component
+   */
+  function createDocumentPreview(content) {
+    const previewDiv = document.createElement('div');
+    previewDiv.className = 'document-preview';
+    
+    previewDiv.innerHTML = `
+      <div class="document-preview-header">
+        <div class="table-preview-title">
+          <span>📄</span>
+          <span>Document</span>
+        </div>
+        <div class="table-preview-actions">
+          <button class="preview-btn copy-btn" onclick="copyDocumentToClipboard(this)">
+            <span>📋</span>
+            <span>Copy</span>
+          </button>
+          <button class="preview-btn download-btn" onclick="downloadDocument(this, 'md')">
+            <span>⬇️</span>
+            <span>Download MD</span>
+          </button>
+        </div>
+      </div>
+      <div class="document-preview-content">
+        ${parseMarkdown(content)}
+      </div>
+    `;
+
+    return previewDiv;
+  }
+
+  /**
+   * Parse table data from markdown content
+   */
+  function parseTableFromContent(content) {
+    const lines = content.split('\n');
+    const tableLines = [];
+    let inTable = false;
+    
+    for (const line of lines) {
+      if (line.includes('|') && line.trim().length > 0) {
+        tableLines.push(line.trim());
+        inTable = true;
+      } else if (inTable && line.trim() === '') {
+        break; // End of table
+      }
+    }
+    
+    if (tableLines.length < 2) return null;
+    
+    // Parse header
+    const headers = tableLines[0].split('|').map(h => h.trim()).filter(h => h);
+    
+    // Skip separator line (if exists)
+    const dataStartIndex = tableLines[1].includes('---') ? 2 : 1;
+    
+    // Parse data rows
+    const rows = [];
+    for (let i = dataStartIndex; i < tableLines.length; i++) {
+      const cells = tableLines[i].split('|').map(c => c.trim()).filter(c => c);
+      if (cells.length > 0) {
+        rows.push(cells);
+      }
+    }
+    
+    return { headers, rows };
+  }
+
+  /**
+   * Generate HTML table from parsed data
+   */
+  function generateTableHTML(tableData) {
+    const { headers, rows } = tableData;
+    
+    let html = '<table class="preview-table">';
+    
+    // Headers
+    html += '<thead><tr>';
+    headers.forEach(header => {
+      html += `<th>${escapeHtml(header)}</th>`;
+    });
+    html += '</tr></thead>';
+    
+    // Rows
+    html += '<tbody>';
+    rows.forEach(row => {
+      html += '<tr>';
+      row.forEach(cell => {
+        html += `<td>${escapeHtml(cell)}</td>`;
+      });
+      html += '</tr>';
+    });
+    html += '</tbody>';
+    
+    html += '</table>';
+    return html;
+  }
+
+  /**
+   * Escape HTML characters
+   */
+  function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
   }
 
   /**
@@ -2581,4 +2775,98 @@ Please continue with your request, and I'll respond from my specialized perspect
   }
 
   document.addEventListener('DOMContentLoaded', init);
+
+  // Global functions for preview components (need to be accessible from onclick handlers)
+  window.copyTableToClipboard = function(button) {
+    const tableContainer = button.closest('.table-preview');
+    const table = tableContainer.querySelector('.preview-table');
+    
+    // Extract table data as CSV
+    let csvContent = '';
+    const rows = table.querySelectorAll('tr');
+    rows.forEach(row => {
+      const cells = row.querySelectorAll('th, td');
+      const rowData = Array.from(cells).map(cell => cell.textContent.trim());
+      csvContent += rowData.join(',') + '\n';
+    });
+    
+    navigator.clipboard.writeText(csvContent).then(() => {
+      showCopyFeedback(button);
+    });
+  };
+
+  window.downloadTable = function(button, format) {
+    const tableContainer = button.closest('.table-preview');
+    const table = tableContainer.querySelector('.preview-table');
+    
+    let content = '';
+    let filename = '';
+    let mimeType = '';
+    
+    if (format === 'csv') {
+      const rows = table.querySelectorAll('tr');
+      rows.forEach(row => {
+        const cells = row.querySelectorAll('th, td');
+        const rowData = Array.from(cells).map(cell => cell.textContent.trim());
+        content += rowData.join(',') + '\n';
+      });
+      filename = 'table-data.csv';
+      mimeType = 'text/csv';
+    }
+    
+    downloadFile(content, filename, mimeType);
+  };
+
+  window.copyDocumentToClipboard = function(button) {
+    const docContainer = button.closest('.document-preview');
+    const content = docContainer.querySelector('.document-preview-content');
+    
+    // Extract text content
+    const textContent = content.textContent.trim();
+    
+    navigator.clipboard.writeText(textContent).then(() => {
+      showCopyFeedback(button);
+    });
+  };
+
+  window.downloadDocument = function(button, format) {
+    const docContainer = button.closest('.document-preview');
+    const content = docContainer.querySelector('.document-preview-content');
+    
+    let fileContent = content.textContent.trim();
+    let filename = 'document.md';
+    let mimeType = 'text/markdown';
+    
+    if (format === 'pdf') {
+      // For PDF, we'd need a library like jsPDF - for now, just download as text
+      filename = 'document.txt';
+      mimeType = 'text/plain';
+    }
+    
+    downloadFile(fileContent, filename, mimeType);
+  };
+
+  function showCopyFeedback(button) {
+    const originalText = button.innerHTML;
+    button.innerHTML = '<span>✓</span><span>Copied!</span>';
+    button.classList.add('copied');
+    
+    setTimeout(() => {
+      button.innerHTML = originalText;
+      button.classList.remove('copied');
+    }, 2000);
+  }
+
+  function downloadFile(content, filename, mimeType) {
+    const blob = new Blob([content], { type: mimeType });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
+
 })();
