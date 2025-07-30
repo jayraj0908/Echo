@@ -1286,8 +1286,8 @@ html[data-theme='dark'] .secondary-button {
   border-top: 1px solid var(--divider);
   background: var(--sidebar-bg);
   flex-shrink: 0;
-  backdrop-filter: blur(15px);
-  -webkit-backdrop-filter: blur(15px);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
 }
 
 /* Hide elements completely when the `.hidden` class is present.  We
@@ -1332,8 +1332,8 @@ html[data-theme='dark'] .secondary-button {
   max-height: 80vh;
   overflow-y: auto;
   z-index: 110;
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
   border: 1px solid var(--glass-border);
 }
 
@@ -1464,8 +1464,8 @@ html[data-theme='dark'] .form-select:focus {
     background: rgba(0, 0, 0, 0.4);
     z-index: 40;
     display: none;
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(5px);
+    -webkit-backdrop-filter: blur(5px);
   }
   
   .sidebar.open + .sidebar-backdrop {
@@ -1488,6 +1488,53 @@ html[data-theme='dark'] .form-select:focus {
     backdrop-filter: blur(5px);
     -webkit-backdrop-filter: blur(5px);
     transition: opacity 0.3s ease;
+  }
+
+  /* Mobile input area optimization */
+  .input-area {
+    padding: var(--space-3);
+    max-width: 100%;
+  }
+
+  .input-container {
+    padding: 1rem;
+    border-radius: 1.25rem;
+    backdrop-filter: blur(5px);
+    -webkit-backdrop-filter: blur(5px);
+    min-height: 60px; /* Ensure sufficient touch target */
+  }
+
+  .message-input {
+    font-size: 16px; /* Prevent zoom on iOS */
+    min-height: 44px; /* Apple's minimum touch target */
+    padding: 0.5rem 0;
+    line-height: 1.4;
+  }
+
+  .send-button {
+    width: 44px; /* Minimum touch target size */
+    height: 44px;
+    padding: 0;
+    border-radius: 0.75rem;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    touch-action: manipulation; /* Improve touch responsiveness */
+  }
+
+  /* Ensure proper touch targets for all interactive elements */
+  .primary-button,
+  .secondary-button {
+    min-height: 44px;
+    padding: 0.75rem 1.25rem;
+    touch-action: manipulation;
+  }
+
+  /* Mobile-specific backdrop filter optimization */
+  .input-container {
+    backdrop-filter: blur(5px);
+    -webkit-backdrop-filter: blur(5px);
   }
 }
 
@@ -1731,8 +1778,8 @@ html[data-theme='dark'] .google-button {
   border-radius: 0.75rem;
   padding: 0.5rem;
   box-shadow: var(--glass-shadow);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
   min-width: 120px;
 }
 

@@ -58,13 +58,13 @@ html[data-theme='dark'] .auth-page {
   min-height: 600px;
 }
 
-/* Left side - Branding with liquid glass */
+/* Left side - Staggered Branding with Box Shadow Glow */
 .auth-brand {
   background: 
-    linear-gradient(135deg, rgba(16, 163, 127, 0.1) 0%, rgba(124, 58, 237, 0.1) 100%),
-    radial-gradient(ellipse at center center, rgba(255, 255, 255, 0.05) 0%, transparent 70%);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+    linear-gradient(135deg, rgba(16, 163, 127, 0.08) 0%, rgba(124, 58, 237, 0.08) 100%),
+    radial-gradient(ellipse at center center, rgba(255, 255, 255, 0.03) 0%, transparent 70%);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   border-right: 1px solid rgba(255, 255, 255, 0.1);
   color: var(--text-primary);
   display: flex;
@@ -73,6 +73,7 @@ html[data-theme='dark'] .auth-page {
   padding: 3rem 2.5rem;
   position: relative;
   overflow: hidden;
+  transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .auth-brand::before {
@@ -83,77 +84,193 @@ html[data-theme='dark'] .auth-page {
   right: 0;
   bottom: 0;
   background: 
-    radial-gradient(circle at 30% 20%, rgba(16, 163, 127, 0.15) 0%, transparent 50%),
-    radial-gradient(circle at 70% 80%, rgba(124, 58, 237, 0.15) 0%, transparent 50%);
-  animation: floatGlass 15s ease-in-out infinite;
+    radial-gradient(circle at 25% 25%, rgba(16, 163, 127, 0.12) 0%, transparent 60%),
+    radial-gradient(circle at 75% 75%, rgba(124, 58, 237, 0.12) 0%, transparent 60%);
+  animation: staggeredFloat 20s ease-in-out infinite;
   pointer-events: none;
+  transition: opacity 0.6s ease;
 }
 
-@keyframes floatGlass {
-  0%, 100% { transform: translate(0, 0) scale(1); }
-  25% { transform: translate(-1%, -0.5%) scale(1.02); }
-  50% { transform: translate(0.5%, -1%) scale(0.98); }
-  75% { transform: translate(-0.5%, 0.5%) scale(1.01); }
+.auth-brand:hover::before {
+  opacity: 1.5;
+  animation-duration: 12s;
+}
+
+@keyframes staggeredFloat {
+  0%, 100% { 
+    transform: translate(0, 0) scale(1) rotate(0deg);
+    opacity: 0.6;
+  }
+  20% { 
+    transform: translate(-2%, -1%) scale(1.03) rotate(0.5deg);
+    opacity: 0.8;
+  }
+  40% { 
+    transform: translate(1%, -2%) scale(0.97) rotate(-0.3deg);
+    opacity: 0.9;
+  }
+  60% { 
+    transform: translate(-1%, 1%) scale(1.02) rotate(0.2deg);
+    opacity: 0.7;
+  }
+  80% { 
+    transform: translate(2%, -0.5%) scale(0.98) rotate(-0.4deg);
+    opacity: 0.8;
+  }
 }
 
 .brand-content {
   z-index: 2;
   position: relative;
+  transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.auth-brand:hover .brand-content {
+  transform: translateY(-4px) scale(1.02);
 }
 
 .brand-logo {
-  margin-bottom: 2rem;
+  margin-bottom: 2.5rem;
+  opacity: 0;
+  animation: staggerIn 1.2s cubic-bezier(0.4, 0, 0.2, 1) 0.2s forwards;
 }
 
 .brand-logo .brand-name {
-  font-size: 2.5rem;
-  font-weight: 700;
-  margin-bottom: 0.5rem;
-}
-
-.brand-logo .brand-tagline {
-  font-size: 0.875rem;
-  opacity: 0.8;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  font-weight: 500;
-}
-
-.brand-message h2 {
-  font-size: 2rem;
-  font-weight: 600;
-  margin: 0 0 1rem 0;
-  line-height: 1.2;
-  background: linear-gradient(135deg, var(--primary) 0%, #7c3aed 100%);
+  font-size: 3rem;
+  font-weight: 800;
+  margin-bottom: 0.75rem;
+  background: linear-gradient(135deg, var(--primary) 0%, #7c3aed 60%, var(--primary) 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
+  text-shadow: 0 0 30px rgba(16, 163, 127, 0.3);
+  transition: all 0.4s ease;
+  cursor: default;
+}
+
+.auth-brand:hover .brand-logo .brand-name {
+  transform: scale(1.05);
+  filter: drop-shadow(0 0 20px rgba(16, 163, 127, 0.4));
+}
+
+.brand-logo .brand-tagline {
+  font-size: 1rem;
+  opacity: 0.85;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  font-weight: 600;
+  color: var(--primary);
+}
+
+.brand-message {
+  opacity: 0;
+  animation: staggerIn 1.2s cubic-bezier(0.4, 0, 0.2, 1) 0.4s forwards;
+}
+
+.brand-message h2 {
+  font-size: 2.2rem;
+  font-weight: 700;
+  margin: 0 0 1.5rem 0;
+  line-height: 1.1;
+  background: linear-gradient(135deg, var(--text-primary) 0%, var(--primary) 50%, #7c3aed 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  transition: transform 0.4s ease;
+}
+
+.auth-brand:hover .brand-message h2 {
+  transform: translateX(8px);
 }
 
 .brand-message p {
-  font-size: 1.1rem;
+  font-size: 1.15rem;
   opacity: 0.9;
-  line-height: 1.6;
+  line-height: 1.7;
   margin: 0;
+  transition: all 0.4s ease;
+}
+
+.auth-brand:hover .brand-message p {
+  opacity: 1;
+  transform: translateX(4px);
 }
 
 .brand-features {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
-  margin-top: 2rem;
+  gap: 1.2rem;
+  margin-top: 2.5rem;
+  opacity: 0;
+  animation: staggerIn 1.2s cubic-bezier(0.4, 0, 0.2, 1) 0.6s forwards;
 }
 
 .feature-item {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
-  font-size: 0.95rem;
-  opacity: 0.9;
+  gap: 1rem;
+  font-size: 1rem;
+  opacity: 0.85;
+  padding: 0.75rem 1rem;
+  border-radius: 1rem;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(8px);
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: default;
+}
+
+.feature-item:hover {
+  opacity: 1;
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(16, 163, 127, 0.2);
+  transform: translateX(12px) scale(1.02);
+  box-shadow: 
+    0 8px 32px rgba(16, 163, 127, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+.feature-item:nth-child(1) { animation-delay: 0.8s; }
+.feature-item:nth-child(2) { animation-delay: 1.0s; }
+.feature-item:nth-child(3) { animation-delay: 1.2s; }
+
+.feature-item {
+  opacity: 0;
+  animation: slideInLeft 0.8s cubic-bezier(0.4, 0, 0.2, 1) forwards;
 }
 
 .feature-icon {
-  font-size: 1.2rem;
+  font-size: 1.4rem;
+  color: var(--primary);
+  filter: drop-shadow(0 0 8px rgba(16, 163, 127, 0.3));
+  transition: all 0.3s ease;
+}
+
+.feature-item:hover .feature-icon {
+  transform: scale(1.2) rotate(5deg);
+  filter: drop-shadow(0 0 12px rgba(16, 163, 127, 0.5));
+}
+
+@keyframes staggerIn {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideInLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-40px);
+  }
+  to {
+    opacity: 0.85;
+    transform: translateX(0);
+  }
 }
 
 /* Animated visual */
@@ -167,8 +284,8 @@ html[data-theme='dark'] .auth-page {
 
 .floating-card {
   background: rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(25px);
-  -webkit-backdrop-filter: blur(25px);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   border: 1px solid rgba(255, 255, 255, 0.15);
   border-radius: 20px;
   padding: 1.5rem;
@@ -780,8 +897,8 @@ html[data-theme='dark'] .auth-forms {
   animation: stepAppear 0.8s ease-out forwards;
   animation-delay: calc(var(--step-delay, 0) * 0.4s);
   transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-  backdrop-filter: blur(15px);
-  -webkit-backdrop-filter: blur(15px);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
 }
 
 .flow-step[data-step="1"] { --step-delay: 0; grid-column: 1; grid-row: 1; }
