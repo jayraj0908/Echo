@@ -536,9 +536,9 @@ html[data-theme='dark'] .model-select {
   padding: 0 1rem;
 }
 
-/* User Message Sections - ChatGPT style full width */
+/* User Message Sections - Compact on right side */
 .user-container {
-  flex-direction: row;
+  flex-direction: row-reverse;
   justify-content: flex-start;
   width: 100%;
 }
@@ -550,14 +550,14 @@ html[data-theme='dark'] .model-select {
   border-radius: 0;
   font-size: var(--font-size-base);
   line-height: var(--line-height-normal);
-  flex: 1;
+  max-width: 50%;
   word-wrap: break-word;
   overflow-wrap: break-word;
   transition: none;
   will-change: auto;
   contain: layout style;
-  margin-left: 0;
-  margin-right: 0.75rem;
+  margin-right: 0;
+  margin-left: 0.75rem;
 }
 
 html[data-theme='dark'] .user-container .bubble-content {
@@ -565,10 +565,10 @@ html[data-theme='dark'] .user-container .bubble-content {
   color: var(--text-primary);
 }
 
-/* Assistant Message Sections - ChatGPT style clean responses */
+/* Assistant Message Sections - Full width on left */
 .assistant-container {
-  flex-direction: row-reverse;
-  justify-content: flex-end;
+  flex-direction: row;
+  justify-content: flex-start;
   width: 100%;
 }
 
@@ -581,12 +581,12 @@ html[data-theme='dark'] .user-container .bubble-content {
   line-height: var(--line-height-relaxed);
   word-wrap: break-word;
   overflow-wrap: break-word;
-  max-width: 70%;
+  flex: 1;
   transition: none;
   will-change: auto;
   contain: layout style;
-  margin-right: 0;
-  margin-left: 0.75rem;
+  margin-left: 0;
+  margin-right: 0.75rem;
 }
 
 html[data-theme='dark'] .assistant-container .bubble-content {

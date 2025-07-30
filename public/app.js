@@ -299,10 +299,25 @@
     }
   }
 
-  function deleteConversation(id) {
+  async function deleteConversation(id) {
     const idx = state.conversations.findIndex((c) => c.id === id);
     if (idx >= 0) {
+      // Remove from local state
       state.conversations.splice(idx, 1);
+      
+      // Delete from Firestore if user is authenticated
+      if (state.user.isAuthenticated && window.db) {
+        try {
+          await window.db.collection('conversations')
+            .doc(`${state.user.id}_${id}`)
+            .delete();
+          console.log('Conversation deleted from Firestore:', id);
+        } catch (error) {
+          console.error('Error deleting conversation from Firestore:', error);
+        }
+      }
+      
+      // Handle active conversation logic
       if (state.activeId === id) {
         // If the active conversation is removed, choose the next one or create a new one
         if (state.conversations.length > 0) {
@@ -311,6 +326,8 @@
           createConversation();
         }
       }
+      
+      // Update UI and save to localStorage
       saveConversations();
       renderChatList();
       renderMessages();
@@ -498,9 +515,7 @@
       deleteBtn.title = 'Delete conversation';
       deleteBtn.addEventListener('click', (e) => {
         e.stopPropagation();
-        if (confirm('Delete this conversation?')) {
-          deleteConversation(conv.id);
-        }
+        deleteConversation(conv.id);
       });
       actions.appendChild(renameBtn);
       actions.appendChild(deleteBtn);
