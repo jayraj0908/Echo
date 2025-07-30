@@ -44,6 +44,8 @@
       maxTokens: 2048,
     },
     editingIndex: null, // index of the user message currently being edited
+    // File upload state
+    uploadedFiles: [],
     // Supabase integration ready
     syncStatus: 'offline', // offline, syncing, synced, error
   };
@@ -69,6 +71,15 @@
   const newChatBtn = DOM.newChatBtn;
   const sendBtn = DOM.sendBtn;
   const messageInput = DOM.messageInput;
+  
+  // File upload elements
+  const attachBtn = document.getElementById('attach-btn');
+  const fileUploadModal = document.getElementById('file-upload-modal');
+  const uploadArea = document.getElementById('upload-area');
+  const fileInput = document.getElementById('file-input');
+  const uploadedFiles = document.getElementById('uploaded-files');
+  const uploadFilesBtn = document.getElementById('upload-files-btn');
+  const cancelUploadBtn = document.getElementById('cancel-upload-btn');
   // Model selection removed - using default model
   const defaultModel = 'claude-3-haiku-20240307';
   const themeToggle = DOM.themeToggle;
@@ -316,6 +327,139 @@
   }
 
   /**
+   * File Upload Functionality
+   */
+  function openFileUpload() {
+    state.uploadedFiles = [];
+    renderUploadedFiles();
+    fileUploadModal.classList.remove('hidden');
+  }
+
+  function closeFileUpload() {
+    state.uploadedFiles = [];
+    renderUploadedFiles();
+    fileUploadModal.classList.add('hidden');
+  }
+
+  function handleFileSelect(files) {
+    Array.from(files).forEach(file => {
+      // Check file size (max 10MB)
+      if (file.size > 10 * 1024 * 1024) {
+        alert(`File "${file.name}" is too large. Maximum size is 10MB.`);
+        return;
+      }
+      
+      // Check if file already exists
+      if (state.uploadedFiles.some(f => f.name === file.name && f.size === file.size)) {
+        return;
+      }
+      
+      const fileObj = {
+        id: uuid(),
+        file: file,
+        name: file.name,
+        size: file.size,
+        type: file.type,
+        preview: null
+      };
+      
+      // Generate preview for images
+      if (file.type.startsWith('image/')) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          fileObj.preview = e.target.result;
+          renderUploadedFiles();
+        };
+        reader.readAsDataURL(file);
+      }
+      
+      state.uploadedFiles.push(fileObj);
+    });
+    
+    renderUploadedFiles();
+    updateUploadButton();
+  }
+
+  function removeUploadedFile(fileId) {
+    state.uploadedFiles = state.uploadedFiles.filter(f => f.id !== fileId);
+    renderUploadedFiles();
+    updateUploadButton();
+  }
+
+  function renderUploadedFiles() {
+    if (!uploadedFiles) return;
+    
+    uploadedFiles.innerHTML = '';
+    
+    state.uploadedFiles.forEach(fileObj => {
+      const fileEl = document.createElement('div');
+      fileEl.className = 'uploaded-file';
+      
+      const preview = fileObj.preview ? 
+        `<img src="${fileObj.preview}" alt="${fileObj.name}" class="file-preview">` :
+        `<div class="file-icon">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M14 2H6C5.46957 2 4.96086 2.21071 4.58579 2.58579C4.21071 2.96086 4 3.46957 4 4V20C4 20.5304 4.21071 21.0391 4.58579 21.4142C4.96086 21.7893 5.46957 22 6 22H18C18.5304 22 19.0391 21.7893 19.4142 21.4142C19.7893 21.0391 20 20.5304 20 20V8L14 2Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M14 2V8H20" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>`;
+      
+      fileEl.innerHTML = `
+        ${preview}
+        <div class="file-info">
+          <div class="file-name">${fileObj.name}</div>
+          <div class="file-size">${formatFileSize(fileObj.size)}</div>
+        </div>
+        <button class="file-remove" onclick="removeUploadedFile('${fileObj.id}')" title="Remove file">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <line x1="18" y1="6" x2="6" y2="18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            <line x1="6" y1="6" x2="18" y2="18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+        </button>
+      `;
+      
+      uploadedFiles.appendChild(fileEl);
+    });
+  }
+
+  function updateUploadButton() {
+    if (uploadFilesBtn) {
+      uploadFilesBtn.disabled = state.uploadedFiles.length === 0;
+      uploadFilesBtn.textContent = state.uploadedFiles.length > 0 ? 
+        `Upload ${state.uploadedFiles.length} file${state.uploadedFiles.length === 1 ? '' : 's'}` : 
+        'Upload Files';
+    }
+  }
+
+  function formatFileSize(bytes) {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+  }
+
+  function processUploadedFiles() {
+    if (state.uploadedFiles.length === 0) return;
+    
+    // For now, just add file names to the message
+    const fileNames = state.uploadedFiles.map(f => f.name).join(', ');
+    const fileMessage = `[Uploaded files: ${fileNames}]\n\n`;
+    
+    // Add to message input
+    messageInput.value = fileMessage + messageInput.value;
+    
+    // Clear uploaded files and close modal
+    closeFileUpload();
+    
+    // Focus on message input
+    messageInput.focus();
+  }
+
+  // Make removeUploadedFile global so it can be called from HTML
+  window.removeUploadedFile = removeUploadedFile;
+
+  /**
    * Chat list rendering
    */
   function renderChatList() {
@@ -474,6 +618,66 @@
       escaped = escaped.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>');
       return escaped;
     }
+  }
+
+  /**
+   * Enhanced professional response formatting like ChatGPT
+   */
+  function enhanceResponseFormatting(content) {
+    // Add professional structure and emojis where appropriate
+    let enhanced = content;
+    
+    // Add emojis to common topics
+    const emojiMappings = [
+      { pattern: /\b(idea|concept|strategy)\b/gi, emoji: '💡' },
+      { pattern: /\b(analysis|research|data)\b/gi, emoji: '📊' },
+      { pattern: /\b(code|development|programming)\b/gi, emoji: '💻' },
+      { pattern: /\b(success|achievement|completed)\b/gi, emoji: '✅' },
+      { pattern: /\b(warning|caution|important)\b/gi, emoji: '⚠️' },
+      { pattern: /\b(error|problem|issue)\b/gi, emoji: '❌' },
+      { pattern: /\b(tip|recommendation|suggestion)\b/gi, emoji: '💡' },
+      { pattern: /\b(document|file|report)\b/gi, emoji: '📄' },
+      { pattern: /\b(user|customer|client)\b/gi, emoji: '👤' },
+      { pattern: /\b(growth|improvement|optimize)\b/gi, emoji: '📈' },
+      { pattern: /\b(security|protection|safe)\b/gi, emoji: '🔒' },
+      { pattern: /\b(test|testing|quality)\b/gi, emoji: '🧪' }
+    ];
+    
+    // Apply emoji enhancements sparingly and naturally
+    emojiMappings.forEach(mapping => {
+      if (Math.random() < 0.3) { // Only 30% chance to add emoji
+        enhanced = enhanced.replace(mapping.pattern, (match) => {
+          // Only add emoji if it's not already present nearby
+          const contextBefore = enhanced.substring(Math.max(0, enhanced.indexOf(match) - 10), enhanced.indexOf(match));
+          const contextAfter = enhanced.substring(enhanced.indexOf(match), enhanced.indexOf(match) + match.length + 10);
+          
+          if (!contextBefore.includes(mapping.emoji) && !contextAfter.includes(mapping.emoji)) {
+            return `${mapping.emoji} ${match}`;
+          }
+          return match;
+        });
+      }
+    });
+    
+    // Enhance headers and sections
+    enhanced = enhanced.replace(/^(#{1,3})\s*(.+)$/gm, (match, hashes, title) => {
+      const level = hashes.length;
+      if (level === 1) {
+        return `${hashes} 🎯 ${title}`;
+      } else if (level === 2) {
+        return `${hashes} 📋 ${title}`;
+      } else {
+        return `${hashes} ▶️ ${title}`;
+      }
+    });
+    
+    // Add professional conclusion markers
+    enhanced = enhanced.replace(/\b(In conclusion|To summarize|In summary)\b/gi, '📝 **$1**');
+    
+    // Enhance key points
+    enhanced = enhanced.replace(/^(\*\s|•\s|-\s)(.+)$/gm, '• $2');
+    
+    return enhanced;
   }
 
   /**
@@ -846,7 +1050,9 @@ ${content.length + 200}
       
       const content = document.createElement('div');
       content.className = 'bubble-content';
-      const enhancedContent = processEnhancedContent(msg.content);
+      // Apply professional formatting first, then enhanced content processing
+      const professionalContent = enhanceResponseFormatting(msg.content);
+      const enhancedContent = processEnhancedContent(professionalContent);
       content.innerHTML = parseMarkdown(enhancedContent);
       
       const actions = document.createElement('div');
@@ -869,26 +1075,26 @@ ${content.length + 200}
   }
 
   /**
-   * Add a single new message bubble with animation
+   * Add a single new message bubble with enhanced animation
    */
   function addMessageBubble(msg, idx) {
     const bubble = createMessageBubble(msg, idx);
-    bubble.style.opacity = '0';
-    bubble.style.transform = 'translateY(20px) scale(0.95)';
-    bubble.style.transition = 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)';
+    bubble.classList.add('entering');
     
     messagesEl.appendChild(bubble);
     
-    // Trigger animation
+    // Smooth scroll to bottom with easing
     requestAnimationFrame(() => {
-      bubble.style.opacity = '1';
-      bubble.style.transform = 'translateY(0) scale(1)';
+      messagesEl.scrollTo({
+        top: messagesEl.scrollHeight,
+        behavior: 'smooth'
+      });
     });
     
-    // Scroll to bottom smoothly
+    // Remove entering class after animation
     setTimeout(() => {
-      messagesEl.scrollTop = messagesEl.scrollHeight;
-    }, 100);
+      bubble.classList.remove('entering');
+    }, 400);
     
     return bubble;
   }
@@ -935,18 +1141,17 @@ ${content.length + 200}
   }
 
   /**
-   * Remove typing indicator
+   * Remove typing indicator with smooth animation
    */
   function removeTypingIndicator() {
     const typingIndicator = messagesEl.querySelector('.typing-indicator');
     if (typingIndicator) {
-      typingIndicator.style.opacity = '0';
-      typingIndicator.style.transform = 'translateY(-20px) scale(0.95)';
+      typingIndicator.classList.add('removing');
       setTimeout(() => {
         if (typingIndicator.parentNode) {
           typingIndicator.parentNode.removeChild(typingIndicator);
         }
-      }, 400);
+      }, 300);
     }
   }
 
@@ -1235,16 +1440,29 @@ Get professional architecture diagrams with:
     if (lastMessage) {
       const contentEl = lastMessage.querySelector('.bubble-content');
       if (contentEl) {
-        const enhancedContent = processEnhancedContent(content);
+        // Add smooth updating class
+        contentEl.classList.add('updating');
+        
+        // Apply professional formatting first, then enhanced content processing
+        const professionalContent = enhanceResponseFormatting(content);
+        const enhancedContent = processEnhancedContent(professionalContent);
         contentEl.innerHTML = parseMarkdown(enhancedContent);
         
         // Re-attach copy handlers for code blocks
         attachCopyHandlers();
         
-        // Scroll to bottom smoothly
+        // Smooth scroll to bottom with easing
         requestAnimationFrame(() => {
-          messagesEl.scrollTop = messagesEl.scrollHeight;
+          messagesEl.scrollTo({
+            top: messagesEl.scrollHeight,
+            behavior: 'smooth'
+          });
         });
+        
+        // Remove updating class after a brief moment
+        setTimeout(() => {
+          contentEl.classList.remove('updating');
+        }, 200);
       }
     }
   }
@@ -2213,6 +2431,59 @@ Please continue with your request, and I'll respond from my specialized perspect
     mobileMenuBtn.addEventListener('click', toggleSidebar);
     // Close sidebar when clicking outside on overlay (handled in CSS)
     window.addEventListener('resize', closeSidebarOnMobile);
+    
+    // File upload functionality
+    if (attachBtn) {
+      attachBtn.addEventListener('click', openFileUpload);
+    }
+    
+    if (fileUploadModal) {
+      // Close modal when clicking backdrop
+      fileUploadModal.addEventListener('click', (e) => {
+        if (e.target === fileUploadModal || e.target.classList.contains('modal-backdrop')) {
+          closeFileUpload();
+        }
+      });
+    }
+    
+    if (uploadArea) {
+      // Click to upload
+      uploadArea.addEventListener('click', () => {
+        fileInput.click();
+      });
+      
+      // Drag and drop
+      uploadArea.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        uploadArea.classList.add('drag-over');
+      });
+      
+      uploadArea.addEventListener('dragleave', (e) => {
+        e.preventDefault();
+        uploadArea.classList.remove('drag-over');
+      });
+      
+      uploadArea.addEventListener('drop', (e) => {
+        e.preventDefault();
+        uploadArea.classList.remove('drag-over');
+        const files = e.dataTransfer.files;
+        handleFileSelect(files);
+      });
+    }
+    
+    if (fileInput) {
+      fileInput.addEventListener('change', (e) => {
+        handleFileSelect(e.target.files);
+      });
+    }
+    
+    if (uploadFilesBtn) {
+      uploadFilesBtn.addEventListener('click', processUploadedFiles);
+    }
+    
+    if (cancelUploadBtn) {
+      cancelUploadBtn.addEventListener('click', closeFileUpload);
+    }
     
     // User menu for logout
     if (userMenuBtn) {
