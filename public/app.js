@@ -1114,22 +1114,21 @@ ${content.length + 200}
             <span></span>
             <span></span>
           </div>
-          <div class="typing-text">BUILDWAY is thinking...</div>
         </div>
       </div>
     `;
     
     // Add with animation
     typingBubble.style.opacity = '0';
-    typingBubble.style.transform = 'translateY(20px) scale(0.95)';
-    typingBubble.style.transition = 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)';
+    typingBubble.style.transform = 'translateY(10px)';
+    typingBubble.style.transition = 'all 0.3s ease-out';
     
     messagesEl.appendChild(typingBubble);
     
     // Trigger animation
     requestAnimationFrame(() => {
       typingBubble.style.opacity = '1';
-      typingBubble.style.transform = 'translateY(0) scale(1)';
+      typingBubble.style.transform = 'translateY(0)';
     });
     
     // Scroll to bottom
@@ -1465,6 +1464,41 @@ Get professional architecture diagrams with:
         }, 200);
       }
     }
+  }
+
+  /**
+   * Create typing effect for new assistant messages
+   */
+  function typewriteMessage(content, element) {
+    let displayedContent = '';
+    let currentIndex = 0;
+    
+    const typeInterval = setInterval(() => {
+      if (currentIndex < content.length) {
+        displayedContent += content[currentIndex];
+        currentIndex++;
+        
+        // Apply formatting and update element
+        const professionalContent = enhanceResponseFormatting(displayedContent);
+        const enhancedContent = processEnhancedContent(professionalContent);
+        element.innerHTML = parseMarkdown(enhancedContent);
+        
+        // Re-attach copy handlers for code blocks
+        attachCopyHandlers();
+        
+        // Scroll to bottom
+        requestAnimationFrame(() => {
+          messagesEl.scrollTo({
+            top: messagesEl.scrollHeight,
+            behavior: 'smooth'
+          });
+        });
+      } else {
+        clearInterval(typeInterval);
+      }
+    }, 30); // Adjust typing speed here (30ms per character)
+    
+    return typeInterval;
   }
 
   /**
